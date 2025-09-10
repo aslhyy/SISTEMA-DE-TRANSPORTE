@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "@inquirer/prompts": "^7.8.4",
+    "prompt-sync": "^4.2.0"
+  },
+  "devDependencies": {
+    "@types/prompt-sync": "^4.2.3"
+  }
+}
