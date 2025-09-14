@@ -1,0 +1,30 @@
+{
+  "name": "sistema-de-transporte",
+  "version": "1.0.0",
+  "description": "La intersección de tipos en TypeScript combina varios tipos en uno solo utilizando el operador &, creando un nuevo tipo que debe tener todas las propiedades y métodos de los tipos originales.",
+  "type": "module",
+  "main": "index.js",
+  "dependencies": {
+    "@inquirer/prompts": "^7.8.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
+  },
+  "scripts": {
+    "start": "node --loader ts-node/esm index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aslhyy/SISTEMA-DE-TRANSPORTE.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aslhyy/SISTEMA-DE-TRANSPORTE/issues"
+  },
+  "homepage": "https://github.com/aslhyy/SISTEMA-DE-TRANSPORTE#readme"
+}
