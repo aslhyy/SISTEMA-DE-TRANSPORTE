@@ -1,4 +1,5 @@
 # Sistema de Transporte
+<<<<<<< HEAD
 
 Este proyecto es un sistema de transporte que utiliza TypeScript para gestionar diferentes tipos de vehículos y sus características. El objetivo es demostrar el uso de la intersección de tipos en TypeScript para combinar las propiedades y métodos de varios tipos en uno solo.
 
@@ -51,3 +52,5 @@ Los tipos de intersección son útiles para:
 Crear nuevos tipos a partir de otros existentes: Puedes construir tipos más complejos y específicos al combinar los rasgos de tipos más sencillos.
 
 Representar objetos con múltiples roles: Un objeto puede tener características de diferentes orígenes o funcioness.
+=======
+>>>>>>> feature/sarah-interseccion
