@@ -313,3 +313,135 @@ Si se agrega un nuevo rol (ej. Inspector), podemos componerlo con las interfaces
 📌 Conclusión:
 El Principio de Segregación de Interfaces nos ayuda a evitar interfaces infladas y a mantener la flexibilidad en el diseño.
 Cada clase o rol en el sistema solo implementa lo que realmente necesita, ni más ni menos.
+
+3.5 Principio D (Dependency Inversion)
+
+El Principio de Inversión de Dependencias establece dos reglas clave:
+
+Los módulos de alto nivel no deben depender de módulos de bajo nivel, sino de abstracciones.
+
+Las abstracciones no deben depender de los detalles, sino que los detalles deben depender de las abstracciones.
+
+El objetivo es reducir el acoplamiento, permitir intercambiar implementaciones sin modificar el código principal y hacer el sistema más flexible y testeable.
+
+src/models/Contenedor.ts — Contenedor
+
+Diagnóstico DIP: No cumple totalmente.
+Actualmente Contenedor depende de detalles concretos como console.log dentro de sus métodos (agregar, mostrarTodos). Esto genera un acoplamiento fuerte con la forma de salida.
+
+Problema: Si mañana se necesita mostrar los datos en una UI web o guardar en un archivo, habría que modificar Contenedor.
+
+Impacto: Reduce testabilidad y reutilización.
+
+Refactor propuesto (uso de abstracciones para notificación):
+
+interface Logger {
+  log(message: string): void;
+}
+
+class ConsoleLogger implements Logger {
+  log(message: string): void {
+    console.log(message);
+  }
+}
+
+class Contenedor<T> {
+  private items: T[] = [];
+  constructor(private logger: Logger) {}
+
+  agregar(item: T): void {
+    this.items.push(item);
+    this.logger.log(`Agregado: ${item}`);
+  }
+
+  obtenerPrimero(): T | undefined {
+    return this.items[0];
+  }
+
+  mostrarTodos(): void {
+    this.logger.log(`Contenido: ${this.items}`);
+  }
+}
+
+
+Impacto: Contenedor ya no depende de console.log directamente, sino de la abstracción Logger. Cambiar de consola a archivo, base de datos o UI sería cuestión de proveer otra implementación de Logger.
+
+src/models/Vehiculo.ts — Vehiculo
+
+Diagnóstico DIP: No cumple completamente.
+El método info() imprime directamente a la consola. Esto mezcla el modelo de datos con la dependencia concreta de IO.
+
+Problema: No es posible reutilizar Vehiculo en otros contextos (API, interfaz gráfica, reportes) sin modificar la clase.
+
+Refactor propuesto (separar el formato y la salida):
+
+interface VehiculoFormatter {
+  format(v: Vehiculo): string;
+}
+
+class ConsoleVehiculoFormatter implements VehiculoFormatter {
+  format(v: Vehiculo): string {
+    return `Vehiculo: [${v.id}] - Tipo: ${v.tipo}, Capacidad: ${v.capacidad}`;
+  }
+}
+
+class Vehiculo {
+  constructor(public id: Id, public tipo: TipoVehiculo, public capacidad: number) {}
+}
+
+// Uso
+const formatter = new ConsoleVehiculoFormatter();
+const bus = new Vehiculo("BUS-123", "Bus", 50);
+console.log(formatter.format(bus));
+
+
+Impacto: la clase Vehiculo queda limpia, y el detalle de cómo se formatea o dónde se imprime depende de una abstracción (VehiculoFormatter), no del modelo.
+
+src/models/Pasajero.ts — Pasajero
+
+Diagnóstico DIP: No cumple.
+En el método pagar, Pasajero depende de console.log para notificar el resultado del pago. Esto fuerza a que toda comunicación sea por consola.
+
+Problema: No se puede reutilizar la lógica de pago en un sistema real (app móvil, web, logs en base de datos) sin modificar la clase.
+
+Refactor propuesto (invertir dependencias con Notifier y PaymentPolicy):
+
+interface Notifier {
+  notify(message: string): void;
+}
+
+class ConsoleNotifier implements Notifier {
+  notify(message: string): void {
+    console.log(message);
+  }
+}
+
+interface PaymentPolicy {
+  canCharge(p: Pasajero<any>, amount: number): boolean;
+  charge(p: Pasajero<any>, amount: number): void;
+}
+
+class DefaultPaymentPolicy implements PaymentPolicy {
+  canCharge(p: Pasajero<any>, amount: number): boolean {
+    return p.saldo >= amount;
+  }
+  charge(p: Pasajero<any>, amount: number): void {
+    p.saldo -= amount;
+  }
+}
+
+class Pasajero<T> {
+  constructor(public nombre: string, public saldo: number, public extra: T, private notifier: Notifier, private policy: PaymentPolicy) {}
+
+  pagar(monto: number): void {
+    if (this.policy.canCharge(this, monto)) {
+      this.policy.charge(this, monto);
+      this.notifier.notify(`${this.nombre} pagó $${monto}. Saldo restante: ${this.saldo}`);
+    } else {
+      this.notifier.notify(`${this.nombre} no tiene saldo suficiente.`);
+    }
+  }
+}
+
+
+Impacto: Pasajero ya no depende de detalles concretos. Tanto la forma de notificación (consola, UI, archivo, API) como la política de cobro (normal, descuento, saldo negativo permitido) se inyectan como dependencias externas y abstraídas.
