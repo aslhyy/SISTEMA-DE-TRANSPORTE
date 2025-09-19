@@ -83,3 +83,35 @@ format(v: Vehiculo) { return `Vehiculo: [${v.id}] - Tipo: ${v.tipo}, Capacidad: 
 const fmt = new VehiculoConsoleFormatter();
 console.log(fmt.format(bus));
 **Impacto:** el modelo queda limpio; nuevas formas de presentar (JSON, HTML, logger) se añaden implementando VehiculoFormatter sin tocar Vehiculo.
+
+###3.3 src/models/Pasajero.ts — Pasajero<T>
+*Responsabilidad declarada:*  representar un pasajero y manejar el pago (pagar).
+####S (Single Responsibility)
+*Diagnóstico:* No cumple completamente.
+*Justificación:* Pasajero mantiene estado del pasajero (nombre, saldo, extra) y además implementa la lógica de negocio pagar. En sistemas simples eso puede aceptarse; sin embargo, pagar mezcla reglas de negocio (verifica saldo y resta) y lógica de salida (console.log) — eso introduce múltiples razones de cambio: formato de notificación, política de saldo, y almacenamiento del saldo.
+*Riesgo si se mantiene así:* pruebas más acopladas, imposibilidad de sustituir la política de pago (por ejemplo, cobrar con distintas tarifas, descuentos) sin modificar la clase.
+####O (Open/Closed)
+*Diagnóstico:* No cumple.
+*Justificación:* La operación pagar es un método monolítico que, si hay cambios en la política de cobro (recargo, descuento, verificación), obliga a modificar Pasajero. Además la notificación por consola está embebida.
+####Refactor propuesto (antes → después)
+// Antes
+class Pasajero<T> {
+nombre: string; saldo: number; extra: T;
+pagar(monto: number): void {
+if (this.saldo >= monto) { this.saldo -= monto; console.log(${this.nombre} pagó $${monto}. Saldo restante: ${this.saldo}); }
+else { console.log(${this.nombre} no tiene saldo suficiente.); }
+}
+}
+
+// Después: separar política de cobro y notificación
+interface PaymentPolicy { canCharge(p: Pasajero<any>, amount: number): boolean; charge(p: Pasajero<any>, amount: number): void; }
+interface Notifier { notify(message: string): void; }
+
+class Pasajero<T> {
+constructor(public nombre: string, public saldo: number, public extra: T) {}
+}
+
+class DefaultPaymentPolicy implements PaymentPolicy {
+canCharge(p: Pasajero<any>, amount: number) { return p.saldo >= amount; }
+charge(p: Pasajero<any>, amount: number) { p.saldo -= amount; }
+}.
