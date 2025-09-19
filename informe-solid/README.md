@@ -211,3 +211,34 @@ class PasajeroVip<T> extends Pasajero<T> {
 
 
 Impacto: la subclase sigue cumpliendo el contrato (paga reduciendo saldo y notificando), pero añade un beneficio adicional sin romper la expectativa de que un pasajero puede pagar o no según su saldo.
+Principio de Segregación de Interfaces (ISP)
+
+El Interface Segregation Principle (ISP) es el cuarto de los principios SOLID.
+Su enunciado dice:
+
+“Los clientes no deberían estar obligados a depender de interfaces que no utilizan”.
+
+En palabras simples:
+👉 Es mejor tener varias interfaces pequeñas y específicas que una interfaz gigante que obligue a implementar cosas innecesarias.
+
+🚫 Ejemplo Incorrecto (rompe ISP)
+
+En este caso, tenemos una interfaz demasiado grande llamada UsuarioSistema.
+Todos los tipos de usuarios del sistema (Pasajero, Conductor, etc.) estarían obligados a implementar propiedades que no necesitan.
+
+// Una interfaz demasiado grande
+interface UsuarioSistema {
+  nombre: string;
+  salario: number;   // ❌ no todos tienen salario
+  licencia: string;  // ❌ no todos tienen licencia
+  saldo: number;     // ❌ no todos pagan con saldo
+}
+
+
+🔴 Problemas:
+
+Un Pasajero no debería tener que declarar salario ni licencia.
+
+Un Conductor no debería tener que declarar saldo.
+
+Se viola el principio ISP porque los clientes dependen de cosas que no usan.
