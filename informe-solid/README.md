@@ -36,8 +36,8 @@ Este informe analiza clases reales encontradas en el código fuente provisto par
 **Justificación:** Actualmente la clase no está preparada para extender comportamiento (por ejemplo: validación al agregar, notificaciones, persistencia alternativa) sin modificarla. Cualquier nueva política (filtrado, logging, persistencia) obligaría a cambiar Contenedor.
 #### Refactor propuesto (antes → después)
 // Antes
-´´´ts
 <pre>
+  ```ts
 class Contenedor<T> {
 private items: T[] = [];
 agregar(item: T): void { this.items.push(item); console.log("Agregado:", item); }
