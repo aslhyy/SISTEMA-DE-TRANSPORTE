@@ -137,3 +137,77 @@ Clases pequeñas y simples (como Contenedor y Vehiculo) son en general coherente
 Pasajero mezcla estado y lógica de negocio/notificación: viola SRP y OCP en escenarios reales. Recomendación: extraer la lógica de pago a un PaymentService y usar políticas/estrategias (PaymentPolicy, Notifier).
 Para OCP, la técnica recomendada es composición y dependencia de abstractions (interfaces) en vez de switch/if por tipo.
 Para SRP, separar responsabilidades por capas: Modelo (datos), Servicios (orquestación y reglas), Repositorios (persistencia), Presentación/Formatters (salida).
+
+3.4 Principio L (Liskov Substitution)
+
+El Principio de Sustitución de Liskov (LSP) indica que las subclases deben poder reemplazar a sus superclases sin alterar el correcto funcionamiento del sistema. En otras palabras, cualquier objeto de una subclase debe poder ser utilizado en lugar de su clase padre, sin romper expectativas, contratos o causar errores inesperados.
+
+src/models/Contenedor.ts — Contenedor
+
+Diagnóstico LSP: Cumple.
+Contenedor<T> no utiliza herencia, sino tipos genéricos. Al trabajar con T, cualquier tipo concreto (string, number, objetos) puede usarse de forma transparente, sin romper la lógica interna.
+
+Ejemplo: Contenedor<number> y Contenedor<string> funcionan de la misma manera.
+
+Riesgo: Nulo, ya que no hay jerarquías de clases en este caso.
+
+src/models/Vehiculo.ts — Vehiculo
+
+Diagnóstico LSP: Potencialmente cumple.
+Actualmente Vehiculo es una clase base, pero no hay subclases implementadas. Si en el futuro se crean Bus, Taxi o Moto como subclases, deben comportarse de forma coherente:
+
+Una instancia de Bus debería poder sustituir un Vehiculo en cualquier método que lo consuma (ej. mostrarVehiculoInfo(Vehiculo v)) sin que cambie el resultado esperado.
+
+Riesgo: Si una subclase cambiara la semántica (por ejemplo, que Moto devuelva capacidad negativa o que Taxi.info() no muestre los datos básicos), se violaría LSP.
+
+Refactor propuesto (si se crean subclases):
+Separar la representación (Vehiculo) de la lógica de impresión (Formatter), asegurando que cualquier Bus o Taxi mantenga la misma estructura de contrato.
+
+abstract class Vehiculo {
+  constructor(public id: Id, public tipo: TipoVehiculo, public capacidad: number) {}
+  abstract info(): string;
+}
+
+class Bus extends Vehiculo {
+  info(): string {
+    return `Bus [${this.id}] con capacidad de ${this.capacidad}`;
+  }
+}
+
+class Taxi extends Vehiculo {
+  info(): string {
+    return `Taxi [${this.id}] capacidad ${this.capacidad}`;
+  }
+}
+
+// Uso
+const vehiculos: Vehiculo[] = [new Bus("BUS-1", "Bus", 40), new Taxi(101, "Taxi", 4)];
+vehiculos.forEach(v => console.log(v.info())); // Cada uno sustituye correctamente a Vehiculo
+
+
+Impacto: garantiza que todas las subclases cumplen el contrato de Vehiculo y que pueden usarse indistintamente.
+
+src/models/Pasajero.ts — Pasajero
+
+Diagnóstico LSP: Cumple, con observaciones.
+Pasajero<T> está diseñado con genéricos, lo que permite extender extra con cualquier tipo (ejemplo: tarjeta, objeto con email). El contrato de la clase se respeta siempre, sin importar qué se pase en T.
+
+Riesgo: Si en una futura extensión se define PasajeroVip extends Pasajero que cambia la lógica de pagar (por ejemplo, permitir saldo negativo o descuentos especiales), debe garantizar que no rompa las expectativas de los métodos que esperan un Pasajero normal.
+
+Refactor propuesto (ejemplo de extensión compatible):
+
+class PasajeroVip<T> extends Pasajero<T> {
+  pagar(monto: number): void {
+    // Descuento del 10% sin romper el contrato básico
+    const montoFinal = monto * 0.9;
+    if (this.saldo >= montoFinal) {
+      this.saldo -= montoFinal;
+      console.log(`${this.nombre} pagó con descuento $${montoFinal}. Saldo restante: ${this.saldo}`);
+    } else {
+      console.log(`${this.nombre} no tiene saldo suficiente.`);
+    }
+  }
+}
+
+
+Impacto: la subclase sigue cumpliendo el contrato (paga reduciendo saldo y notificando), pero añade un beneficio adicional sin romper la expectativa de que un pasajero puede pagar o no según su saldo.
