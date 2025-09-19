@@ -242,3 +242,74 @@ Un Pasajero no debería tener que declarar salario ni licencia.
 Un Conductor no debería tener que declarar saldo.
 
 Se viola el principio ISP porque los clientes dependen de cosas que no usan.
+// Interfaces pequeñas y específicas
+interface Persona {
+  nombre: string;
+}
+
+interface Trabajador {
+  salario: number;
+}
+
+interface LicenciaConduccion {
+  licencia: string;
+}
+
+interface UsuarioSaldo {
+  saldo: number;
+}
+
+// Composición para armar roles
+type Conductor = Persona & Trabajador & LicenciaConduccion;
+type Pasajero = Persona & UsuarioSaldo;
+De esta forma, cada rol depende solo de lo que realmente necesita.
+
+Uso en las Clases
+ts
+Copiar código
+// Pasajero con ISP
+class PasajeroImpl implements Pasajero {
+  nombre: string;
+  saldo: number;
+
+  constructor(nombre: string, saldo: number) {
+    this.nombre = nombre;
+    this.saldo = saldo;
+  }
+
+  pagar(monto: number): void {
+    if (this.saldo >= monto) {
+      this.saldo -= monto;
+      console.log(${this.nombre} pagó $${monto}. Saldo restante: ${this.saldo});
+    } else {
+      console.log(${this.nombre} no tiene saldo suficiente.);
+    }
+  }
+}
+
+// Conductor con ISP
+class ConductorImpl implements Conductor {
+  nombre: string;
+  salario: number;
+  licencia: string;
+
+  constructor(nombre: string, salario: number, licencia: string) {
+    this.nombre = nombre;
+    this.salario = salario;
+    this.licencia = licencia;
+  }
+
+  info(): void {
+    console.log(Conductor: ${this.nombre}, Salario: ${this.salario}, Licencia: ${this.licencia});
+  }
+}✅ Ventajas de aplicar ISP
+
+Pasajero solo depende de nombre y saldo.
+
+Conductor solo depende de nombre, salario y licencia.
+
+Si se agrega un nuevo rol (ej. Inspector), podemos componerlo con las interfaces que necesite, sin heredar propiedades innecesarias.
+
+📌 Conclusión:
+El Principio de Segregación de Interfaces nos ayuda a evitar interfaces infladas y a mantener la flexibilidad en el diseño.
+Cada clase o rol en el sistema solo implementa lo que realmente necesita, ni más ni menos.
