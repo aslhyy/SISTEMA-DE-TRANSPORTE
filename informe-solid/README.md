@@ -57,3 +57,29 @@ obtenerPrimero(): T | undefined { return this.items[0]; }
 mostrarTodos(): T[] { return [...this.items]; }
 }
 *Impacto:* nuevas responsabilidades (logging, validación, persistencia) se implementan creando nuevas AddPolicy sin modificar Contenedor
+
+### 3.2 src/models/Vehiculo.ts — Vehiculo
+**Responsabilidad declarada:** representar datos de un vehículo y exponer una función info() para mostrar por consola.
+####S (Single Responsibility)
+Diagnóstico: Cumple.
+Justificación: Vehiculo contiene sólo estado (id, tipo, capacidad) y un método info() orientado a presentar información. Ambos están cohesivos: el motivo de cambio sería el modelo de datos del vehículo. Sin embargo, info() imprime a console.log, lo que introduce una dependencia de salida (IO) dentro del modelo.
+Riesgo si se mantiene así: Moderado: mezclar modelo de dominio con salida a consola afecta pruebas y reutilización (por ejemplo, no es trivial reutilizar Vehiculo.info() para UI o logs centralizados).
+####Refactor propuesto (mejora SRP y OCP)
+// Antes
+class Vehiculo { info(): void { console.log(`Vehiculo: [${this.id}] - Tipo: ${this.tipo}, Capacidad: ${this.capacidad}`); } }
+
+// Después: separar presentación (single responsibility) y hacer la clase abierta a formatos variados
+interface VehiculoFormatter { format(v: Vehiculo): string }
+
+class Vehiculo {
+constructor(public id: Id, public tipo: TipoVehiculo, public capacidad: number) {}
+}
+
+class VehiculoConsoleFormatter implements VehiculoFormatter {
+format(v: Vehiculo) { return `Vehiculo: [${v.id}] - Tipo: ${v.tipo}, Capacidad: ${v.capacidad}`; }
+}
+
+// Uso
+const fmt = new VehiculoConsoleFormatter();
+console.log(fmt.format(bus));
+**Impacto:** el modelo queda limpio; nuevas formas de presentar (JSON, HTML, logger) se añaden implementando VehiculoFormatter sin tocar Vehiculo.
