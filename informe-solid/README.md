@@ -115,3 +115,25 @@ class DefaultPaymentPolicy implements PaymentPolicy {
 canCharge(p: Pasajero<any>, amount: number) { return p.saldo >= amount; }
 charge(p: Pasajero<any>, amount: number) { p.saldo -= amount; }
 }.
+class ConsoleNotifier implements Notifier { notify(m: string) { console.log(m); } }
+
+// Servicio que orquesta el pago
+class PaymentService {
+constructor(private policy: PaymentPolicy, private notifier: Notifier) {}
+cobrar(p: Pasajero<any>, monto: number) {
+if (this.policy.canCharge(p, monto)) {
+this.policy.charge(p, monto);
+this.notifier.notify(`${p.nombre} pagó ${monto}. Saldo restante: ${p.saldo}`);
+} else {
+this.notifier.notify(`${p.nombre} no tiene saldo suficiente.`);
+}
+}
+}
+**Impacto:** ahora soportamos fácilmente nuevas políticas (descuentos, prepago, validaciones) y distintos canales de notificación (console, UI, email) sin tocar Pasajero ni PaymentService.
+###3.4 Tipos/Interfaces: Persona, Trabajador, Conductor
+Son declaraciones de tipo y no contienen comportamiento. Cumplen SRP (son simples DTOs) y no aplican OCP en sentido estricto porque no contienen lógica; sin embargo, si se necesita comportamiento asociado (por ejemplo: calcularSalario()), conviene mover esa lógica a clases/servicios para cumplir SRP.
+##4. Conclusiones Generales
+Clases pequeñas y simples (como Contenedor y Vehiculo) son en general coherentes, pero hay mezcla entre modelo y salida a consola que reduce la reutilización y complica pruebas unitarias.
+Pasajero mezcla estado y lógica de negocio/notificación: viola SRP y OCP en escenarios reales. Recomendación: extraer la lógica de pago a un PaymentService y usar políticas/estrategias (PaymentPolicy, Notifier).
+Para OCP, la técnica recomendada es composición y dependencia de abstractions (interfaces) en vez de switch/if por tipo.
+Para SRP, separar responsabilidades por capas: Modelo (datos), Servicios (orquestación y reglas), Repositorios (persistencia), Presentación/Formatters (salida).
