@@ -36,17 +36,16 @@ Este informe analiza clases reales encontradas en el código fuente provisto par
 **Justificación:** Actualmente la clase no está preparada para extender comportamiento (por ejemplo: validación al agregar, notificaciones, persistencia alternativa) sin modificarla. Cualquier nueva política (filtrado, logging, persistencia) obligaría a cambiar Contenedor.
 #### Refactor propuesto (antes → después)
 // Antes
-<pre>
-  ```ts
+```ts
 class Contenedor<T> {
 private items: T[] = [];
 agregar(item: T): void { this.items.push(item); console.log("Agregado:", item); }
 obtenerPrimero(): T | undefined { return this.items[0]; }
 mostrarTodos(): void { console.log("Contenido:", this.items); }
 }
-</pre>
-<pre>
+```
 // Después: abrir por composición y estrategias
+```ts
 interface AddPolicy<T> { beforeAdd?(item: T): void; afterAdd?(item: T): void; }
 
 class Contenedor<T> {
@@ -62,7 +61,7 @@ this.policy?.afterAdd?.(item);
 obtenerPrimero(): T | undefined { return this.items[0]; }
 mostrarTodos(): T[] { return [...this.items]; }
 }
-</pre>
+```
 *Impacto:* nuevas responsabilidades (logging, validación, persistencia) se implementan creando nuevas AddPolicy sin modificar Contenedor
 
 ### 3.2 src/models/Vehiculo.ts — Vehiculo
