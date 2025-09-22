@@ -358,7 +358,7 @@ Actualmente Contenedor depende de detalles concretos como console.log dentro de 
 **Problema:** Si mañana se necesita mostrar los datos en una UI web o guardar en un archivo, habría que modificar Contenedor.
 <br>
 **Impacto:** Reduce testabilidad y reutilización.
-<br>
+<br><br>
 **Refactor propuesto (uso de abstracciones para notificación):**
 ```ts
 interface Logger {
@@ -398,7 +398,7 @@ class Contenedor<T> {
 El método info() imprime directamente a la consola. Esto mezcla el modelo de datos con la dependencia concreta de IO.
 
 **Problema**: No es posible reutilizar Vehiculo en otros contextos (API, interfaz gráfica, reportes) sin modificar la clase.
-<br>
+<br><br>
 **Refactor propuesto (separar el formato y la salida):**
 ```ts
 interface VehiculoFormatter {
@@ -431,7 +431,7 @@ console.log(formatter.format(bus));
 En el método pagar, Pasajero depende de console.log para notificar el resultado del pago. Esto fuerza a que toda comunicación sea por consola.
 <br>
 **Problema:** No se puede reutilizar la lógica de pago en un sistema real (app móvil, web, logs en base de datos) sin modificar la clase.
-<br>
+<br><br>
 **Refactor propuesto (invertir dependencias con Notifier y PaymentPolicy):**
 ```ts
 interface Notifier {
